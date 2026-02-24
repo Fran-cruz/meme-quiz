@@ -67,7 +67,7 @@ function startGame() {
                     <div class="p-6 text-gray-900 dark:text-gray-100">
                         You're logged in as Sudo!
                     </div>
-<!--
+
                     <div class="d-flex justify-center ma-4 ga-8">
                         <v-btn class="p-6 text-gray-900 dark:text-gray-100" @click="startSession" :loading="loading">
                             Start Session
@@ -77,8 +77,8 @@ function startGame() {
                             Join Game
                         </v-btn>
                     </div>
--->
-                    <!-- Lobby: show once session is created
+
+                    <!-- Lobby: show once session is created-->
                     <div v-if="session" class="text-gray-900 dark:text-gray-100">
                         <h3>Game Code: {{ session.code }}</h3>
                         <p>Players joined: {{ players.length }}</p>
@@ -93,7 +93,7 @@ function startGame() {
                             Start Game
                         </v-btn>
                     </div>
--->
+
                 </div>
             </div>
         </div>

@@ -4,7 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-//use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\GameSessionController;
 use App\Http\Controllers\PlayerController;
 
@@ -22,7 +22,7 @@ Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-//Route::get('/question', [QuestionController::class, 'index'])->name('question.index');
+Route::get('/question', [QuestionController::class, 'index'])->name('question.index');
 
 
 Route::middleware('auth')->group(function () {
