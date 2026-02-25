@@ -30,7 +30,7 @@ const sessionId = page.props.session.id
 */
 const questions = ref([
     { question: 'What is 2 + 2?', image: null, answers: ['1','2','3','4'], correct: 3 },
-    { question: 'Capital of France?', image: null, answers: ['Berlin','Paris','Rome','Madrid'], correct: 1 }
+    { question: 'Capital of France?', image: null, answers: ['Berlin','Paris','Rome','Madrid'], correct: 2 }
 ])
 
 const currentIndex = ref(0)

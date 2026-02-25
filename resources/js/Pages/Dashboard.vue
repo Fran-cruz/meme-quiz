@@ -67,33 +67,6 @@ function startGame() {
                     <div class="p-6 text-gray-900 dark:text-gray-100">
                         You're logged in as Sudo!
                     </div>
-
-                    <div class="d-flex justify-center ma-4 ga-8">
-                        <v-btn class="p-6 text-gray-900 dark:text-gray-100" @click="startSession" :loading="loading">
-                            Start Session
-                        </v-btn>
-
-                        <v-btn class="p-6 text-gray-900 dark:text-gray-100" @click="$inertia.visit('/join')">
-                            Join Game
-                        </v-btn>
-                    </div>
-
-                    <!-- Lobby: show once session is created-->
-                    <div v-if="session" class="text-gray-900 dark:text-gray-100">
-                        <h3>Game Code: {{ session.code }}</h3>
-                        <p>Players joined: {{ players.length }}</p>
-
-                        <v-list >
-                            <v-list-item v-for="player in players" :key="player.id" class="text-gray-900 dark:text-gray-100" >
-                                {{ player.nickname }}
-                            </v-list-item>
-                        </v-list>
-
-                        <v-btn class="p-6 text-gray-900 dark:text-gray-100" @click="startGame" :disabled="players.length === 0">
-                            Start Game
-                        </v-btn>
-                    </div>
-
                 </div>
             </div>
         </div>
