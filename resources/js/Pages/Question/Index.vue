@@ -11,10 +11,10 @@
 <script setup>
 import QuestionTemplate from '@/Pages/Components/QuestionTemplate.vue';  // Import the renamed component
 
-const question = "Tu mama?";
-const answers = ['Si', 'No', 'Quizas', 'si'];
+const question = "Pregunta?";
+const answers = ['A1', 'A2', 'A3', 'A4'];
 const timeLeft = 12;
-const image = "https://heightline.com/wp-content/uploads/maxresdefault-102-696x392.jpg";  // Define the image path
+const image = "Path/to/image.jpg";  // Define the image path
 
 function handleAnswer(index) {
     console.log(`You selected: ${answers[index]}`);

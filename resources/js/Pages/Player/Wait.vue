@@ -13,11 +13,15 @@
             <p class="p-6 text-gray-900 dark:text-gray-100">
                 Game Code: {{ session?.code }}
             </p>
-            <p class="p-6 text-gray-900 dark:text-gray-100" v-if="session?.status === 'waiting' || session?.status === 'playing'">
+            <p class="p-6 text-gray-900 dark:text-gray-100" v-if="session?.status === 'waiting'">
                 Waiting for the game to start...
             </p>
-            <p class="p-6 text-gray-900 dark:text-gray-100" v-else-if="session?.status === 'playing'">
+            <p class="p-6 text-blue-600 dark:text-blue-400" v-else-if="session?.status === 'playing'">
                 The game has started.
+            </p>
+
+            <p class="p-6 text-yellow-600 dark:text-yellow-400" v-else-if="session?.status === 'closed'">
+                The game session is closed.
             </p>
             <p class="p-6 text-red-600 dark:text-red-400" v-else>
                 This game has been terminated.
@@ -56,5 +60,15 @@ onMounted(() => {
 
 onUnmounted(() => {
     clearInterval(intervalId)
+})
+// for redirecting if playing
+import { watch } from 'vue'
+
+watch(session, (newSession) => {
+    if (!newSession) return
+
+    if (newSession.status === 'playing') {
+        window.location.href = `/player/${player.id}/questions`
+    }
 })
 </script>

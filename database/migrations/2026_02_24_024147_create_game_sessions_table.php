@@ -18,7 +18,7 @@ return new class extends Migration
 
             $table->string('code')->unique(); // join code
 
-            $table->enum('status', ['waiting', 'playing', 'finished'])->default('waiting');
+            $table->enum('status', ['waiting', 'closed', 'playing', 'finished'])->default('waiting');
 
             $table->unsignedBigInteger('current_question_id')->nullable();
 

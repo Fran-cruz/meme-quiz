@@ -16,7 +16,8 @@
                     <p><strong>Session ID:</strong> {{ session.id }}</p>
                     <p><strong>Game Code:</strong> {{ session.code }}</p>
                     <p><strong>Players:</strong> {{ session.players.length }}</p>
-                    <p><strong>Status:</strong> {{ session.status }}</p>
+                    <p><strong class="statusColor">Status:</strong> {{ session.status }}</p>
+
                 </div>
                 <v-btn color="primary" @click="showSession(session.id)">
                     Show More
@@ -26,14 +27,32 @@
     </AuthenticatedLayout>
 </template>
 
+<!--<script setup>-->
+<!--import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'-->
+<!--import { usePage } from '@inertiajs/vue3'-->
+<!--import { router } from '@inertiajs/vue3'-->
+
+<!--const sessions = usePage()?.props?.value?.sessions || []-->
+
+<!--const showSession = (id) => {-->
+<!--    router.visit(`/sessions/manage/${id}`)-->
+<!--}-->
+<!--</script>-->
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import { usePage } from '@inertiajs/vue3'
-import { router } from '@inertiajs/vue3'
+import { usePage, router } from '@inertiajs/vue3'
 
-const sessions = usePage()?.props?.value?.sessions || []
+const page = usePage()
+const sessions = page.props.sessions ?? []
 
 const showSession = (id) => {
     router.visit(`/sessions/manage/${id}`)
+}
+
+const statusColor = {
+    waiting: 'blue',
+    closed: 'orange',
+    playing: 'green',
+    finished: 'red'
 }
 </script>

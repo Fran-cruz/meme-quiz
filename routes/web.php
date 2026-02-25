@@ -34,6 +34,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/sessions/manage', [GameSessionController::class, 'manage'])->name('sessions.manage'); // List/manage sessions
     Route::get('/sessions/all', [GameSessionController::class, 'all'])->name('sessions.all'); // List all sessions summary
     Route::get('/sessions/manage/{session}', [GameSessionController::class, 'showManage'])->name('sessions.manage.show'); // Details of a session for management
+    Route::post('/sessions/{session}/start', [GameSessionController::class, 'start'])->name('sessions.start'); // Start session
 
     Route::post('/sessions/create/{quiz}', [GameSessionController::class, 'create'])->name('sessions.create'); // Create a new session
     Route::get('/sessions/{session}', [GameSessionController::class, 'show'])->name('sessions.show'); // Return session info
@@ -50,7 +51,11 @@ Route::middleware('auth')->group(function () {
 
     // Waiting Room
     Route::get('/player/{player}/wait', [PlayerController::class, 'wait'])->name('player.wait');
-
+    // Playing
+    Route::get('/player/{player}/questions', [PlayerController::class, 'questions'])->name('player.questions');
+//    Route::get('/player/{player}/questions', function () {
+//        return Inertia::render('PlayerQuestions');
+//    });
 });
 
 require __DIR__.'/auth.php';

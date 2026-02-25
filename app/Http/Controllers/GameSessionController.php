@@ -76,7 +76,7 @@ class GameSessionController extends Controller
     // Close room manually (mark as playing)
     public function closeSession(GameSession $session)
     {
-        $session->update(['status' => 'playing', 'ended_at' => now()]);
+        $session->update(['status' => 'closed']);
         return redirect()->back()->with('success', 'Session closed.');
     }
 
@@ -89,16 +89,23 @@ class GameSessionController extends Controller
 
     public function all()
     {
-        /*$sessions = GameSession::with('players')->get();
-        return Inertia::render('Sessions/All', ['sessions' => $sessions]);*/
-        $sessions = GameSession::with('players')
-            ->withCount('players')
-            ->orderByDesc('created_at')
+        $sessions = GameSession::with('players') // ← load players
+        ->orderByDesc('created_at')
             ->get();
 
         return Inertia::render('Sessions/All', [
             'sessions' => $sessions,
         ]);
+    }
+
+    public function start(GameSession $session)
+    {
+        $session->update([
+            'status' => 'playing',
+            'started_at' => now(),
+        ]);
+
+        return back();
     }
     /**
      * Store a newly created resource in storage.
@@ -113,7 +120,19 @@ class GameSessionController extends Controller
      */
     public function show(GameSession $session)
     {
+        $session->load('players');
+
         return response()->json($session);
+    }
+
+    public function showManage(GameSession $session)
+    {
+        $session->load('players', 'quiz');
+
+        return Inertia::render('Sessions/SessionDetail', [
+            'session' => $session,
+            'players' => $session->players,
+        ]);
     }
 
     /**

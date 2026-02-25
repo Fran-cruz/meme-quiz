@@ -34,6 +34,20 @@ class PlayerController extends Controller
             ], 422); // 422 Unprocessable Content is fine for validation-like errors
         }
 
+        // Check if the session is playing
+        if ($session->status === 'playing') {
+            return response()->json([
+                'message' => 'This game has started.'
+            ], 422); // 422 Unprocessable Content is fine for validation-like errors
+        }
+
+        // Check if the session is closed
+        if ($session->status !== 'waiting') {
+            return back()->withErrors([
+                'code' => 'This session is not accepting players.'
+            ]);
+        }
+
         // Create the player
         $player = Player::create([
             'nickname' => $request->nickname,
@@ -53,6 +67,16 @@ class PlayerController extends Controller
         $player->load('gameSession');
 
         return Inertia::render('Player/Wait', [
+            'player' => $player,
+            'session' => $player->gameSession,
+        ]);
+    }
+
+    public function questions(Player $player)
+    {
+        $player->load('gameSession');
+
+        return Inertia::render('Player/Questions', [
             'player' => $player,
             'session' => $player->gameSession,
         ]);
