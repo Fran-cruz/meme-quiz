@@ -1,5 +1,5 @@
 <template>
-    <AuthenticatedLayout>
+    <GuestLayout>
         <template #header>
             <h2 class="text-xl font-semibold leading-tight dark:text-gray-200">
                 Waiting Room
@@ -27,11 +27,11 @@
                 This game has been terminated.
             </p>
         </div>
-    </AuthenticatedLayout>
+    </GuestLayout>
 </template>
 
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
+import GuestLayout from '@/Layouts/GuestLayout.vue'
 import { usePage } from '@inertiajs/vue3'
 import { ref, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'

@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('player_answers', function (Blueprint $table) {
             $table->id();
-
             $table->foreignId('player_id')->constrained()->cascadeOnDelete();
             $table->foreignId('question_id')->constrained()->cascadeOnDelete();
+            $table->unique(['player_id', 'question_id']);
             $table->foreignId('answer_id')->constrained()->cascadeOnDelete();
-
+            $table->boolean('is_correct');
             $table->integer('response_time')->nullable(); // milliseconds
 
             $table->timestamps();

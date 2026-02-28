@@ -4,8 +4,12 @@
         <p>You can wait for results.</p>
     </div>
 
+    <div v-if="showMeme" class="meme-overlay">
+        <img :src="currentMeme" class="meme-image" />
+    </div>
+
     <QuestionTemplate
-        v-else
+        v-if="!quizCompleted && currentQuestion"
         :question="currentQuestion.question"
         :image="currentQuestion.image"
         :answers="currentQuestion.answers"
@@ -21,36 +25,94 @@ import QuestionTemplate from '@/Pages/Components/QuestionTemplate.vue'
 import { usePage } from '@inertiajs/vue3'
 
 const page = usePage()
-
 const playerId = page.props.player.id
 const sessionId = page.props.session.id
 
-/*
-  TEMP quiz data
-*/
-const questions = ref([
-    { question: 'What is 2 + 2?', image: null, answers: ['1','2','3','4'], correct: 3 },
-    { question: 'Capital of France?', image: null, answers: ['Berlin','Paris','Rome','Madrid'], correct: 2 }
-])
-
+/* ---------------- QUIZ STATE ---------------- */
+const questions = ref([])
 const currentIndex = ref(0)
-const timeLeft = ref(15)
 const quizCompleted = ref(false)
 
-const currentQuestion = computed(() => questions.value[currentIndex.value])
+/* ---------------- MEMES & SOUND ---------------- */
+const showMeme = ref(false)
+const currentMeme = ref(null)
+const goodSound = new Audio('/sounds/good.mp3')
+const badSound = new Audio('/sounds/bad.mp3')
 
-function selectAnswer(index) {
-    if (currentIndex.value < questions.value.length - 1) {
-        currentIndex.value++
-    } else {
-        quizCompleted.value = true
+/* ---------------- TIMER ---------------- */
+const timeLeft = ref(0)
+let timerInterval = null
+
+const currentQuestion = computed(() => questions.value[currentIndex.value] ?? null)
+
+const startTimer = () => {
+    clearInterval(timerInterval)
+    if (!currentQuestion.value) return
+    timeLeft.value = currentQuestion.value.time_limit
+
+    timerInterval = setInterval(() => {
+        if (timeLeft.value > 0) {
+            timeLeft.value--
+        } else {
+            clearInterval(timerInterval)
+            selectAnswer(null) // if no answer selected, submit null
+        }
+    }, 1000)
+}
+
+/* ---------------- FETCH QUESTIONS ---------------- */
+const loadQuestions = async () => {
+    try {
+        const res = await axios.get(`/player/${playerId}/questions-data`)
+        questions.value = res.data.questions
+        startTimer()
+    } catch (e) {
+        console.error('Failed loading questions:', e)
+    }
+}
+
+/* ---------------- ANSWER HANDLER ---------------- */
+const selectAnswer = async (answer) => {
+    if (!currentQuestion.value) return
+
+    clearInterval(timerInterval)
+    const responseTime = currentQuestion.value.time_limit - timeLeft.value
+
+    try {
+        const res = await axios.post(`/player/${playerId}/answer`, {
+            question_id: currentQuestion.value.id,
+            answer_id: answer?.id || null,
+            response_time: responseTime
+        })
+
+        const data = res.data
+
+        if (data.is_correct) goodSound.play()
+        else badSound.play()
+
+        currentMeme.value = data.meme
+        showMeme.value = true
+
+        setTimeout(() => {
+            showMeme.value = false
+
+            if (currentIndex.value < questions.value.length - 1) {
+                currentIndex.value++
+                startTimer() // start next question
+            } else {
+                quizCompleted.value = true
+            }
+        }, 2000)
+
+    } catch (e) {
+        console.error('Error submitting answer:', e)
     }
 }
 
 /* ---------------- SESSION POLLING ---------------- */
 const session = ref(null)
 const redirected = ref(false)
-let interval = null
+let sessionInterval = null
 
 const pollSession = async () => {
     try {
@@ -61,30 +123,44 @@ const pollSession = async () => {
     }
 }
 
-onMounted(() => {
-    pollSession()
-    interval = setInterval(pollSession, 2000)
+onMounted(async () => {
+    await loadQuestions()
+    await pollSession()
+    sessionInterval = setInterval(pollSession, 2000)
 })
 
 onUnmounted(() => {
-    clearInterval(interval)
+    clearInterval(timerInterval)
+    clearInterval(sessionInterval)
 })
 
-/* Redirect if host terminates or session finishes */
+/* ---------------- REDIRECT IF SESSION FINISHED ---------------- */
 watch(
     () => session.value?.status,
     (status) => {
         if (!status || redirected.value) return
 
-        if (status === 'finished') {
-            redirected.value = true
-            window.location.href = `/player/${playerId}/wait`
-        }
-
-        if (quizCompleted.value) {
+        if (status === 'finished' && !quizCompleted.value) {
             redirected.value = true
             window.location.href = `/player/${playerId}/wait`
         }
     }
 )
 </script>
+
+<style>
+.meme-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.meme-image {
+    max-width: 80%;
+    max-height: 80%;
+}
+</style>

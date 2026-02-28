@@ -10,7 +10,7 @@ class PlayerAnswer extends Model
     /** @use HasFactory<\Database\Factories\PlayerAnswerFactory> */
     use HasFactory;
 
-    protected $fillable = ['player_id', 'question_id', 'answer_id', 'response_time'];
+    protected $fillable = ['player_id', 'question_id', 'answer_id', 'is_correct', 'response_time'];
 
     public function player()
     {

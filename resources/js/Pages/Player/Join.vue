@@ -1,5 +1,5 @@
 <template>
-    <AuthenticatedLayout>
+    <GuestLayout>
         <template #header>
             <h2 class="text-xl font-semibold leading-tight dark:text-gray-200">
                 Join Game
@@ -28,11 +28,11 @@
                 Join Game
             </v-btn>
         </div>
-    </AuthenticatedLayout>
+    </GuestLayout>
 </template>
 
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
+import GuestLayout from '@/Layouts/GuestLayout.vue'
 import { ref } from 'vue'
 import axios from 'axios'
 import { router } from '@inertiajs/vue3'

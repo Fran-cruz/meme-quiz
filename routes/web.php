@@ -44,18 +44,21 @@ Route::middleware('auth')->group(function () {
     Route::post('/sessions/{session}/erase-players', [GameSessionController::class, 'erasePlayers'])->name('sessions.erasePlayers');
     Route::post('/sessions/{session}/close', [GameSessionController::class, 'closeSession'])->name('sessions.close'); // Set status to 'playing'
     Route::post('/sessions/{session}/terminate', [GameSessionController::class, 'terminateSession'])->name('sessions.terminate'); // Set status to 'finished'
-
-    // Player join
-    Route::get('/join', [PlayerController::class, 'showJoinPage'])->name('player.join');
-    Route::post('/join', [PlayerController::class, 'join'])->name('player.join.post');
-
-    // Waiting Room
-    Route::get('/player/{player}/wait', [PlayerController::class, 'wait'])->name('player.wait');
-    // Playing
-    Route::get('/player/{player}/questions', [PlayerController::class, 'questions'])->name('player.questions');
-//    Route::get('/player/{player}/questions', function () {
-//        return Inertia::render('PlayerQuestions');
-//    });
 });
+
+// Player join
+Route::get('/join', [PlayerController::class, 'showJoinPage'])->name('player.join');
+Route::post('/join', [PlayerController::class, 'join'])->name('player.join.post');
+
+// Waiting Room
+Route::get('/player/{player}/wait', [PlayerController::class, 'wait'])->name('player.wait');
+// Playing
+Route::get('/player/{player}/questions', [PlayerController::class, 'questions'])->name('player.questions');
+
+// Get questions from db
+Route::get('/player/{player}/questions-data', [PlayerController::class, 'questionsData'])->name('player.questions.data');
+
+// route for post player/{player}/answer
+Route::post('/player/{player}/answer', [PlayerController::class, 'submitAnswer']);
 
 require __DIR__.'/auth.php';

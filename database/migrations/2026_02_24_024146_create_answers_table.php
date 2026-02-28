@@ -18,8 +18,7 @@ return new class extends Migration
 
             $table->string('answer');
 
-            $table->string('meme')->nullable(); // feedback image
-            $table->string('sound')->nullable(); // feedback sound
+            $table->boolean('is_correct');
 
             $table->timestamps();
         });
