@@ -18,6 +18,8 @@ class AnswerFactory extends Factory
     {
         return [
             //
+            'answer' => $this->faker->word(),
+            'is_correct' => $this->faker->boolean(),
         ];
     }
 }

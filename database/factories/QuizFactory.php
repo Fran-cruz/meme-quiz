@@ -18,6 +18,8 @@ class QuizFactory extends Factory
     {
         return [
             //
+            'title' => $this->faker->sentence(3),
+            'description' => $this->faker->sentence(),
         ];
     }
 }
