@@ -237,13 +237,13 @@ class QuizSeeder extends Seeder
 
             $question = Question::create([
                 'quiz_id' => $quiz->id,
-                'question_text' => $q['question'],
+                'question' => $q['question'],
             ]);
 
             foreach ($q['answers'] as $answer) {
                 Answer::create([
                     'question_id' => $question->id,
-                    'answer_text' => $answer[0],
+                    'answer' => $answer[0],
                     'is_correct' => $answer[1],
                 ]);
             }
