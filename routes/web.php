@@ -10,19 +10,20 @@ use App\Http\Controllers\PlayerController;
 
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+//    return Inertia::render('Welcome', [
+//        'canLogin' => Route::has('login'),
+//        'canRegister' => Route::has('register'),
+//        'laravelVersion' => Application::VERSION,
+//        'phpVersion' => PHP_VERSION,
+//    ]);
+    return Inertia::render('Player/Join');
 });
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/question', [QuestionController::class, 'index'])->name('question.index');
+//Route::get('/question', [QuestionController::class, 'index'])->name('question.index');
 
 
 Route::middleware('auth')->group(function () {
@@ -33,11 +34,12 @@ Route::middleware('auth')->group(function () {
     // Game session routes
     Route::get('/sessions/manage', [GameSessionController::class, 'manage'])->name('sessions.manage'); // List/manage sessions
     Route::get('/sessions/all', [GameSessionController::class, 'all'])->name('sessions.all'); // List all sessions summary
+
     Route::get('/sessions/manage/{session}', [GameSessionController::class, 'showManage'])->name('sessions.manage.show'); // Details of a session for management
+    Route::get('/sessions/{session}/json', [GameSessionController::class, 'showManageJson'])->name('sessions.json');;
     Route::post('/sessions/{session}/start', [GameSessionController::class, 'start'])->name('sessions.start'); // Start session
 
     Route::post('/sessions/create/{quiz}', [GameSessionController::class, 'create'])->name('sessions.create'); // Create a new session
-    Route::get('/sessions/{session}', [GameSessionController::class, 'show'])->name('sessions.show'); // Return session info
     Route::get('/sessions/{session}/players', [GameSessionController::class, 'players'])->name('sessions.players'); // Return session players
 
     // Session management actions
@@ -61,4 +63,9 @@ Route::get('/player/{player}/questions-data', [PlayerController::class, 'questio
 // route for post player/{player}/answer
 Route::post('/player/{player}/answer', [PlayerController::class, 'submitAnswer']);
 
+// Get session json
+Route::get('/sessions/{session}', [GameSessionController::class, 'show'])->name('sessions.show'); // Return session info
+
+// Players get final leaderboard
+Route::get('/sessions/{session}/finished', [GameSessionController::class, 'finished']);
 require __DIR__.'/auth.php';

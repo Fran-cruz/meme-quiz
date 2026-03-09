@@ -120,18 +120,70 @@ class GameSessionController extends Controller
      */
     public function show(GameSession $session)
     {
-        $session->load('players');
+        $session->load([
+            'players.answers' // load each player's answers
+        ]);
 
-        return response()->json($session);
+        return response()->json([
+            'id' => $session->id,
+            'code' => $session->code,
+            'status' => $session->status,
+            'started_at' => $session->started_at,
+            'ended_at' => $session->ended_at,
+            'players' => $session->players,
+        ]);
     }
 
     public function showManage(GameSession $session)
     {
-        $session->load('players', 'quiz');
+        $session->load('quiz', 'players.answers'); // use the correct relation name
+
+        $players = $session->players->map(function ($player) {
+            $player->correct_count = $player->answers->where('is_correct', true)->count();
+            return $player;
+        })->sortByDesc('correct_count');
 
         return Inertia::render('Sessions/SessionDetail', [
             'session' => $session,
-            'players' => $session->players,
+            'players' => $players->values(),
+        ]);
+    }
+
+    // Add this method
+    public function showManageJson(GameSession $session)
+    {
+        $players = $session->players()
+            ->with('answers')
+            ->get()
+            ->map(function ($player) {
+                $player->correct_count = $player->answers->where('is_correct', true)->count();
+                return $player;
+            })
+            ->sortByDesc('correct_count')
+            ->values();
+
+        return response()->json([
+            'session' => $session->fresh(),
+            'players' => $players,
+        ]);
+    }
+
+    public function finished(GameSession $session)
+    {
+        $players = $session->players()
+            ->with('answers')
+            ->get()
+            ->map(function ($player) {
+                $player->correct_count = $player->answers
+                    ->where('is_correct', true)
+                    ->count();
+                return $player;
+            })
+            ->sortByDesc('correct_count')
+            ->values();
+
+        return Inertia::render('Sessions/QuizFinished', [
+            'players' => $players,
         ]);
     }
 

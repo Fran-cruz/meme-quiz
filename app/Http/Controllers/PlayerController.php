@@ -81,12 +81,19 @@ class PlayerController extends Controller
     {
         $player->load('gameSession');
 
+        // Redirect immediately if quiz finished
+        if ($player->gameSession->status === 'finished') {
+            return Inertia::render('Player/QuizFinished', [
+                'player' => $player,
+                'session' => $player->gameSession,
+            ]);
+        }
+
         return Inertia::render('Player/Questions', [
             'player' => $player,
             'session' => $player->gameSession,
         ]);
     }
-
     public function questionsData(Player $player)
     {
         $session = $player->gameSession;
@@ -97,8 +104,13 @@ class PlayerController extends Controller
             ->orderBy('order')
             ->get(['id', 'question', 'image', 'time_limit']);
 
+        // Fetch all answers the player has already submitted
+        $playerAnswers = PlayerAnswer::where('player_id', $player->id)
+            ->pluck('answer_id', 'question_id'); // returns: [question_id => answer_id]
+
         return response()->json([
             'questions' => $questions,
+            'player_answers' => $playerAnswers, // frontend can check which questions are answered
         ]);
     }
 
@@ -110,6 +122,7 @@ class PlayerController extends Controller
             'response_time' => 'required|numeric|min:0'
         ]);
 
+        // Check if player already answered
         if (PlayerAnswer::where('player_id', $player->id)
             ->where('question_id', $request->question_id)
             ->exists()) {
@@ -119,11 +132,24 @@ class PlayerController extends Controller
             ], 400);
         }
 
-        $answer = Answer::where('id', $request->answer_id)
-            ->where('question_id', $request->question_id)
-            ->firstOrFail();
+        if ($request->answer_id == 81) {
+            $answer = Answer::findOrFail(81); // ignore question_id
+        } else {
+            $answer = Answer::where('id', $request->answer_id)
+                ->where('question_id', $request->question_id)
+                ->firstOrFail();
+        }
 
+        $session = $player->gameSession;
+        $question = $answer->question;
+
+        // Determine if answer is correct
         $isCorrect = $answer->is_correct;
+
+        // Mark as incorrect if quiz is finished or time ran out
+        if ($session->status === 'finished' || $request->response_time > $question->time_limit) {
+            $isCorrect = false;
+        }
 
         // Store player answer
         PlayerAnswer::create([
@@ -136,18 +162,15 @@ class PlayerController extends Controller
 
         // Load memes.json
         $memes = json_decode(File::get(resource_path('data/memes.json')), true);
-
         $memeType = $isCorrect ? 'good' : 'bad';
-
         $randomMeme = $memes[$memeType][array_rand($memes[$memeType])];
 
         return response()->json([
             'is_correct' => $isCorrect,
             'meme' => $randomMeme,
-            'sound' => $memeType // frontend decides which file to play
+            'sound' => $memeType
         ]);
     }
-
     public function index()
     {
         //

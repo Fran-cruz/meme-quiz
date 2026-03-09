@@ -18,17 +18,19 @@
                         :key="player.id"
                         class="text-gray-900 dark:text-gray-100"
                     >
-                        {{ player.nickname }}
+                        {{ player.nickname }} - Score: {{ player.correct_count }}
                     </v-list-item>
                 </v-list>
 
-                <v-btn
-                    class="p-6 text-gray-900 dark:text-gray-100"
-                    @click="startGame"
-                    :disabled="players.length === 0 || session.status === 'finished' || session.status === 'playing'"
-                >
-                    Start Game
-                </v-btn>
+                <div class="mt-4">
+                    <v-btn
+                        class="p-6 text-gray-900 dark:text-gray-100"
+                        @click="startGame"
+                        :disabled="players.length === 0 || session.status === 'finished' || session.status === 'playing'"
+                    >
+                        Start Game
+                    </v-btn>
+                </div>
 
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <v-btn
@@ -65,18 +67,18 @@
 
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import { usePage } from '@inertiajs/vue3'
-import axios from 'axios'
 import { ref, onMounted, onUnmounted } from 'vue'
+import axios from 'axios'
+import { usePage } from '@inertiajs/vue3'
 
 const page = usePage()
-
 const session = ref(page.props.session || null)
 const players = ref(page.props.players || [])
 
 let pollInterval = null
 let polling = false
 
+// ----------------- POLLING FUNCTION -----------------
 const pollSession = async () => {
     if (!session.value?.id) return
     if (polling) return
@@ -84,12 +86,21 @@ const pollSession = async () => {
     polling = true
 
     try {
-        const res = await axios.get(`/sessions/${session.value.id}`)
+        const res = await axios.get(`/sessions/${session.value.id}/json`)
 
-        console.log('poll result:', res.data)
+        const newSession = res.data.session
+        const newPlayers = res.data.players || []
 
-        session.value = res.data
-        players.value = res.data.players || []
+        // update session status
+        session.value = {
+            ...session.value,
+            status: newSession.status,
+            started_at: newSession.started_at,
+            ended_at: newSession.ended_at
+        }
+
+        // IMPORTANT: replace array with fresh reference
+        players.value = [...newPlayers]
 
     } catch (err) {
         console.error('Polling failed:', err)
@@ -98,6 +109,7 @@ const pollSession = async () => {
     }
 }
 
+// ----------------- LIFECYCLE -----------------
 onMounted(() => {
     pollInterval = setInterval(pollSession, 2000)
 })
@@ -106,6 +118,7 @@ onUnmounted(() => {
     if (pollInterval) clearInterval(pollInterval)
 })
 
+// ----------------- ACTIONS -----------------
 const erasePlayers = async () => {
     await axios.post(`/sessions/${session.value.id}/erase-players`)
 }

@@ -1,8 +1,3 @@
-<script setup>
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
-import { Link } from '@inertiajs/vue3';
-</script>
-
 <template>
     <div
         class="flex min-h-screen flex-col items-center bg-gray-100 pt-6 sm:justify-center sm:pt-0 dark:bg-gray-900"
@@ -13,6 +8,12 @@ import { Link } from '@inertiajs/vue3';
             </Link>
         </div>
 
+        <!-- Header slot -->
+        <header class="w-full max-w-md px-6">
+            <slot name="header" />
+        </header>
+
+        <!-- Default slot -->
         <div
             class="mt-6 w-full overflow-hidden bg-white px-6 py-4 shadow-md sm:max-w-md sm:rounded-lg dark:bg-gray-800"
         >
@@ -20,3 +21,8 @@ import { Link } from '@inertiajs/vue3';
         </div>
     </div>
 </template>
+
+<script setup>
+import ApplicationLogo from '@/Components/ApplicationLogo.vue'
+import { Link } from '@inertiajs/vue3'
+</script>

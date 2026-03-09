@@ -22,7 +22,8 @@ export default defineConfig({
         port: 5173,         // optional, default dev port
         strictPort: true,
         hmr: {
-            host: 'formulaically-hypoxic-carlita.ngrok-free.dev', // your ngrok URL
+            // host: 'formulaically-hypoxic-carlita.ngrok-free.dev', // your ngrok URL
+            host: null, // your ngrok URL
             protocol: 'wss', // use websocket secure
         },
     },

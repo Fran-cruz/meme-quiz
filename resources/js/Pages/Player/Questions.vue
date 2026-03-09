@@ -32,6 +32,7 @@ const sessionId = page.props.session.id
 const questions = ref([])
 const currentIndex = ref(0)
 const quizCompleted = ref(false)
+const answeredQuestions = ref({}) // key: question_id, value: answer_id
 
 /* ---------------- MEMES & SOUND ---------------- */
 const showMeme = ref(false)
@@ -42,12 +43,15 @@ const badSound = new Audio('/sounds/bad.mp3')
 /* ---------------- TIMER ---------------- */
 const timeLeft = ref(0)
 let timerInterval = null
+const answered = ref(false) // current question answered
 
 const currentQuestion = computed(() => questions.value[currentIndex.value] ?? null)
 
 const startTimer = () => {
     clearInterval(timerInterval)
     if (!currentQuestion.value) return
+
+    answered.value = currentQuestion.value.id in answeredQuestions.value
     timeLeft.value = currentQuestion.value.time_limit
 
     timerInterval = setInterval(() => {
@@ -55,7 +59,11 @@ const startTimer = () => {
             timeLeft.value--
         } else {
             clearInterval(timerInterval)
-            selectAnswer(null) // if no answer selected, submit null
+
+            if (!answered.value) {
+                // Submit forced incorrect answer when time runs out
+                selectAnswer({ id: 81 }) // 81 = forced incorrect answer ID
+            }
         }
     }, 1000)
 }
@@ -65,6 +73,14 @@ const loadQuestions = async () => {
     try {
         const res = await axios.get(`/player/${playerId}/questions-data`)
         questions.value = res.data.questions
+        answeredQuestions.value = res.data.player_answers || {}
+
+        // Set current index to first unanswered question
+        const firstUnansweredIndex = questions.value.findIndex(
+            q => !(q.id in answeredQuestions.value)
+        )
+        currentIndex.value = firstUnansweredIndex >= 0 ? firstUnansweredIndex : questions.value.length - 1
+
         startTimer()
     } catch (e) {
         console.error('Failed loading questions:', e)
@@ -73,7 +89,9 @@ const loadQuestions = async () => {
 
 /* ---------------- ANSWER HANDLER ---------------- */
 const selectAnswer = async (answer) => {
-    if (!currentQuestion.value) return
+    if (!currentQuestion.value || answered.value) return
+    answered.value = true
+    answeredQuestions.value[currentQuestion.value.id] = answer?.id || 81
 
     clearInterval(timerInterval)
     const responseTime = currentQuestion.value.time_limit - timeLeft.value
@@ -81,7 +99,7 @@ const selectAnswer = async (answer) => {
     try {
         const res = await axios.post(`/player/${playerId}/answer`, {
             question_id: currentQuestion.value.id,
-            answer_id: answer?.id || null,
+            answer_id: answer?.id || 81,
             response_time: responseTime
         })
 
@@ -103,7 +121,6 @@ const selectAnswer = async (answer) => {
                 quizCompleted.value = true
             }
         }, 2000)
-
     } catch (e) {
         console.error('Error submitting answer:', e)
     }

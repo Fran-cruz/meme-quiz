@@ -229,6 +229,13 @@ class QuizSeeder extends Seeder
         ];
 
         $this->insertQuestions($quiz2, $generalQuestions);
+
+        // Add a global forced incorrect answer
+        $forcedIncorrect = Answer::create([
+            'question_id' => 1, // just link it to any question (won’t be used normally)
+            'answer' => 'FORCED_INCORRECT',
+            'is_correct' => false,
+        ]);
     }
 
     private function insertQuestions($quiz, $questions)
