@@ -39,10 +39,12 @@ import axios from 'axios'
 const pageProps = usePage().props
 const player = pageProps.player
 const session = reactive({ ...pageProps.session })
+const quizCompleted = pageProps.quizCompleted ?? false
 
 let intervalId = null
 
 const fetchSession = async () => {
+    console.error('Is Quiz Completed?: ', quizCompleted)
     try {
         const res = await axios.get(`/sessions/${session.id}`)
         Object.assign(session, res.data)
@@ -51,7 +53,8 @@ const fetchSession = async () => {
     }
 }
 
-onMounted(() => {
+onMounted(async () => {
+    await fetchSession()
     intervalId = setInterval(fetchSession, 3000)
 })
 
@@ -62,9 +65,12 @@ onUnmounted(() => {
 watch(
     () => session.status,
     (newStatus) => {
-        if (newStatus === 'playing') {
+        if (newStatus === 'playing' && !quizCompleted) {
             window.location.href = `/player/${player.id}/questions`
+        } else if (newStatus === 'finished') {
+            window.location.href = `/sessions/${session.id}/finished`
         }
-    }
+    },
+    { immediate: true }
 )
 </script>

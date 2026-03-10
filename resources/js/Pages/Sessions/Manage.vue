@@ -6,48 +6,80 @@
             </h2>
         </template>
 
-        <div class="d-flex justify-center ma-4 ga-4">
-            <v-btn class="p-6 text-gray-900 dark:text-gray-100" @click="startSession">
-                Start New Session
-            </v-btn>
-            <v-btn class="p-6 text-gray-900 dark:text-gray-100" @click="goAllSessions">
-                View All Sessions
-            </v-btn>
+        <div class="max-w-xl mx-auto p-6">
+            <v-select
+                v-model="selectedQuizId"
+                :items="quizOptions"
+                item-title="title"
+                item-value="id"
+                label="Select Quiz"
+                class="mb-4"
+                density="comfortable"
+                variant="outlined"
+            />
+
+            <div class="d-flex justify-center ma-4 ga-4">
+                <v-btn
+                    class="p-6 text-gray-900 dark:text-gray-100"
+                    @click="startSession"
+                    :loading="loading"
+                    :disabled="!selectedQuizId"
+                >
+                    Start New Session
+                </v-btn>
+
+                <v-btn
+                    class="p-6 text-gray-900 dark:text-gray-100"
+                    @click="goAllSessions"
+                >
+                    View All Sessions
+                </v-btn>
+            </div>
         </div>
     </AuthenticatedLayout>
 </template>
 
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import { router } from '@inertiajs/vue3'
+import { usePage, router } from '@inertiajs/vue3'
 import axios from 'axios'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
+const page = usePage()
 
 const loading = ref(false)
-const session = ref(null)
+const selectedQuizId = ref(null)
+
+const quizzes = page.props.quizzes || []
+
+const quizOptions = computed(() => quizzes.map(quiz => ({
+    id: quiz.id,
+    title: quiz.title
+})))
 
 function startSession() {
-    loading.value = true
-    const quizId = 1 // later dynamic
+    if (!selectedQuizId.value) {
+        alert('Please select a quiz first.')
+        return
+    }
 
-    axios.post(`/sessions/create/${quizId}`)
+    loading.value = true
+
+    axios.post(`/sessions/create/${selectedQuizId.value}`)
         .then(res => {
             const sessionId = res.data.id
-
-            console.log('Session created:', sessionId)
-
             router.visit(`/sessions/manage/${sessionId}`)
-            //http://127.0.0.1:8000/sessions/manage/14
         })
         .catch(err => {
             console.error('Error creating session:', err)
             alert('Failed to start session.')
         })
-        .finally(() => loading.value = false)
+        .finally(() => {
+            loading.value = false
+        })
 }
 
-const goAllSessions = () => {
+function goAllSessions() {
     router.visit('/sessions/all')
 }
 </script>

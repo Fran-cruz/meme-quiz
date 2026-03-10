@@ -4,6 +4,10 @@
         <p>You can wait for results.</p>
     </div>
 
+    <div v-else-if="!currentQuestion" class="text-center p-10 text-white">
+        <h1 class="text-2xl font-bold">Loading question...</h1>
+    </div>
+
     <div v-if="showMeme" class="meme-overlay">
         <img :src="currentMeme" class="meme-image" />
     </div>
@@ -32,7 +36,7 @@ const sessionId = page.props.session.id
 const questions = ref([])
 const currentIndex = ref(0)
 const quizCompleted = ref(false)
-const answeredQuestions = ref({}) // key: question_id, value: answer_id
+const answeredQuestions = ref({})
 
 /* ---------------- MEMES & SOUND ---------------- */
 const showMeme = ref(false)
@@ -43,7 +47,7 @@ const badSound = new Audio('/sounds/bad.mp3')
 /* ---------------- TIMER ---------------- */
 const timeLeft = ref(0)
 let timerInterval = null
-const answered = ref(false) // current question answered
+const answered = ref(false)
 
 const currentQuestion = computed(() => questions.value[currentIndex.value] ?? null)
 
@@ -61,8 +65,7 @@ const startTimer = () => {
             clearInterval(timerInterval)
 
             if (!answered.value) {
-                // Submit forced incorrect answer when time runs out
-                selectAnswer({ id: 81 }) // 81 = forced incorrect answer ID
+                selectAnswer({ id: 81 })
             }
         }
     }, 1000)
@@ -72,15 +75,30 @@ const startTimer = () => {
 const loadQuestions = async () => {
     try {
         const res = await axios.get(`/player/${playerId}/questions-data`)
-        questions.value = res.data.questions
+        questions.value = res.data.questions || []
         answeredQuestions.value = res.data.player_answers || {}
 
-        // Set current index to first unanswered question
+        if (!questions.value.length) {
+            quizCompleted.value = true
+            return
+        }
+
         const firstUnansweredIndex = questions.value.findIndex(
             q => !(q.id in answeredQuestions.value)
         )
-        currentIndex.value = firstUnansweredIndex >= 0 ? firstUnansweredIndex : questions.value.length - 1
 
+        // If all questions are already answered, mark completed and go back to wait
+        if (firstUnansweredIndex === -1) {
+            quizCompleted.value = true
+
+            setTimeout(() => {
+                window.location.href = `/player/${playerId}/wait`
+            }, 1000)
+
+            return
+        }
+
+        currentIndex.value = firstUnansweredIndex
         startTimer()
     } catch (e) {
         console.error('Failed loading questions:', e)
@@ -90,6 +108,7 @@ const loadQuestions = async () => {
 /* ---------------- ANSWER HANDLER ---------------- */
 const selectAnswer = async (answer) => {
     if (!currentQuestion.value || answered.value) return
+
     answered.value = true
     answeredQuestions.value[currentQuestion.value.id] = answer?.id || 81
 
@@ -116,9 +135,13 @@ const selectAnswer = async (answer) => {
 
             if (currentIndex.value < questions.value.length - 1) {
                 currentIndex.value++
-                startTimer() // start next question
+                startTimer()
             } else {
                 quizCompleted.value = true
+
+                setTimeout(() => {
+                    window.location.href = `/player/${playerId}/wait`
+                }, 1500)
             }
         }, 2000)
     } catch (e) {
@@ -157,7 +180,7 @@ watch(
     (status) => {
         if (!status || redirected.value) return
 
-        if (status === 'finished' && !quizCompleted.value) {
+        if (status === 'finished') {
             redirected.value = true
             window.location.href = `/player/${playerId}/wait`
         }

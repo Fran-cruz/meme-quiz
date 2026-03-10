@@ -71,10 +71,28 @@ class PlayerController extends Controller
     {
         $player->load('gameSession');
 
-        // Redirect immediately if quiz finished
-        if ($player->gameSession->status === 'finished') {
+        $totalQuestions = Question::where('quiz_id', $player->gameSession->quiz_id)->count();
 
-            $players = $this->getLeaderboard($player->gameSession);
+        $answeredQuestions = PlayerAnswer::where('player_id', $player->id)
+            ->distinct('question_id')
+            ->count('question_id');
+
+        $quizCompleted = $totalQuestions > 0 && $answeredQuestions >= $totalQuestions;
+
+        if ($player->gameSession->status === 'finished') {
+            $players = $player->gameSession->players()
+                ->with('answers')
+                ->get()
+                ->map(function ($p) {
+                    $p->correct_count = $p->answers->where('is_correct', true)->count();
+                    $p->total_answered = $p->answers->count();
+                    return $p;
+                })
+                ->sortBy([
+                    ['correct_count', 'desc'],
+                    ['total_answered', 'asc'],
+                ])
+                ->values();
 
             return Inertia::render('Sessions/QuizFinished', [
                 'player' => $player,
@@ -83,37 +101,58 @@ class PlayerController extends Controller
             ]);
         }
 
-        // else (quiz is NOT finished)
         return Inertia::render('Player/Wait', [
             'player' => $player,
             'session' => $player->gameSession,
+            'quizCompleted' => $quizCompleted,
         ]);
     }
 
-    public function questions(Player $player, GameSession $session)
+    public function questions(Player $player)
     {
         $player->load('gameSession');
 
-        // Redirect immediately if quiz finished
-        if ($player->gameSession->status === 'finished') {
+        $totalQuestions = Question::where('quiz_id', $player->gameSession->quiz_id)->count();
 
-            $players = $this->getLeaderboard($player->gameSession);
+        $answeredQuestions = PlayerAnswer::where('player_id', $player->id)
+            ->distinct('question_id')
+            ->count('question_id');
+
+        $quizCompleted = $totalQuestions > 0 && $answeredQuestions >= $totalQuestions;
+
+        if ($quizCompleted) {
+            return redirect()->route('player.wait', $player->id);
+        }
+
+        if ($player->gameSession->status === 'finished') {
+            $players = $player->gameSession->players()
+                ->with('answers')
+                ->get()
+                ->map(function ($p) {
+                    $p->correct_count = $p->answers->where('is_correct', true)->count();
+                    $p->total_answered = $p->answers->count();
+                    return $p;
+                })
+                ->sortBy([
+                    ['correct_count', 'desc'],
+                    ['total_answered', 'asc'],
+                ])
+                ->values();
 
             return Inertia::render('Sessions/QuizFinished', [
                 'player' => $player,
-                'correct_count' => $player->gameSession->correct_count,
-                'total_count' => $player->gameSession->total_count,
                 'session' => $player->gameSession,
                 'players' => $players,
             ]);
         }
 
-        // else (quiz is NOT finished)
         return Inertia::render('Player/Questions', [
             'player' => $player,
             'session' => $player->gameSession,
+            'quizCompleted' => $quizCompleted,
         ]);
     }
+
     public function questionsData(Player $player)
     {
         $session = $player->gameSession;
@@ -121,16 +160,16 @@ class PlayerController extends Controller
         $questions = Question::with(['answers' => function ($query) {
             $query->select('id', 'question_id', 'answer');
         }])
+            ->where('quiz_id', $session->quiz_id)
             ->orderBy('order')
-            ->get(['id', 'question', 'image', 'time_limit']);
+            ->get(['id', 'quiz_id', 'question', 'image', 'time_limit', 'order']);
 
-        // Fetch all answers the player has already submitted
         $playerAnswers = PlayerAnswer::where('player_id', $player->id)
-            ->pluck('answer_id', 'question_id'); // returns: [question_id => answer_id]
+            ->pluck('answer_id', 'question_id');
 
         return response()->json([
             'questions' => $questions,
-            'player_answers' => $playerAnswers, // frontend can check which questions are answered
+            'player_answers' => $playerAnswers,
         ]);
     }
 

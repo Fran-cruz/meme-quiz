@@ -18,7 +18,8 @@
                         :key="player.id"
                         class="text-gray-900 dark:text-gray-100"
                     >
-                        {{ player.nickname }} - Score: {{ player.correct_count }} / {{ player.total_answered }}                    </v-list-item>
+                        {{ player.nickname }} - Score: {{ player.correct_count || 0 }} / {{ player.total_answered || 0 }}
+                    </v-list-item>
                 </v-list>
 
                 <div class="mt-4">
@@ -77,7 +78,6 @@ const players = ref(page.props.players || [])
 let pollInterval = null
 let polling = false
 
-// ----------------- POLLING FUNCTION -----------------
 const pollSession = async () => {
     if (!session.value?.id) return
     if (polling) return
@@ -90,17 +90,15 @@ const pollSession = async () => {
         const newSession = res.data.session
         const newPlayers = res.data.players || []
 
-        // update session status
         session.value = {
             ...session.value,
+            code: newSession.code,
             status: newSession.status,
             started_at: newSession.started_at,
             ended_at: newSession.ended_at
         }
 
-        // IMPORTANT: replace array with fresh reference
         players.value = [...newPlayers]
-
     } catch (err) {
         console.error('Polling failed:', err)
     } finally {
@@ -108,7 +106,6 @@ const pollSession = async () => {
     }
 }
 
-// ----------------- LIFECYCLE -----------------
 onMounted(() => {
     pollInterval = setInterval(pollSession, 2000)
 })
@@ -117,7 +114,6 @@ onUnmounted(() => {
     if (pollInterval) clearInterval(pollInterval)
 })
 
-// ----------------- ACTIONS -----------------
 const erasePlayers = async () => {
     await axios.post(`/sessions/${session.value.id}/erase-players`)
 }
