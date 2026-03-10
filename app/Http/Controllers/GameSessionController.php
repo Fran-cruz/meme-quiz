@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\GameSession;
+use App\Models\Player;
 use Illuminate\Http\Request;
 
 use App\Models\Quiz;
@@ -140,6 +141,7 @@ class GameSessionController extends Controller
 
         $players = $session->players->map(function ($player) {
             $player->correct_count = $player->answers->where('is_correct', true)->count();
+            $player->total_answered = $player->answers->count();
             return $player;
         })->sortByDesc('correct_count');
 
@@ -174,15 +176,20 @@ class GameSessionController extends Controller
             ->with('answers')
             ->get()
             ->map(function ($player) {
-                $player->correct_count = $player->answers
-                    ->where('is_correct', true)
-                    ->count();
+
+                $player->correct_count =
+                    $player->answers->where('is_correct', true)->count();
+
+                $player->total_answered =
+                    $player->answers->count();
+
                 return $player;
             })
             ->sortByDesc('correct_count')
             ->values();
 
         return Inertia::render('Sessions/QuizFinished', [
+            'session' => $session,
             'players' => $players,
         ]);
     }

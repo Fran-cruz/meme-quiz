@@ -71,24 +71,44 @@ class PlayerController extends Controller
     {
         $player->load('gameSession');
 
+        // Redirect immediately if quiz finished
+        if ($player->gameSession->status === 'finished') {
+
+            $players = $this->getLeaderboard($player->gameSession);
+
+            return Inertia::render('Sessions/QuizFinished', [
+                'player' => $player,
+                'session' => $player->gameSession,
+                'players' => $players,
+            ]);
+        }
+
+        // else (quiz is NOT finished)
         return Inertia::render('Player/Wait', [
             'player' => $player,
             'session' => $player->gameSession,
         ]);
     }
 
-    public function questions(Player $player)
+    public function questions(Player $player, GameSession $session)
     {
         $player->load('gameSession');
 
         // Redirect immediately if quiz finished
         if ($player->gameSession->status === 'finished') {
-            return Inertia::render('Player/QuizFinished', [
+
+            $players = $this->getLeaderboard($player->gameSession);
+
+            return Inertia::render('Sessions/QuizFinished', [
                 'player' => $player,
+                'correct_count' => $player->gameSession->correct_count,
+                'total_count' => $player->gameSession->total_count,
                 'session' => $player->gameSession,
+                'players' => $players,
             ]);
         }
 
+        // else (quiz is NOT finished)
         return Inertia::render('Player/Questions', [
             'player' => $player,
             'session' => $player->gameSession,
@@ -171,6 +191,29 @@ class PlayerController extends Controller
             'sound' => $memeType
         ]);
     }
+
+    private function getLeaderboard($session)
+    {
+        return $session->players()
+            ->with('answers')
+            ->get()
+            ->map(function ($player) {
+
+                $player->correct_count =
+                    $player->answers->where('is_correct', true)->count();
+
+                $player->total_answered =
+                    $player->answers->count();
+
+                return $player;
+            })
+            ->sortBy([
+                ['correct_count', 'desc'],
+                ['total_answered', 'asc']
+            ])
+            ->values();
+    }
+
     public function index()
     {
         //

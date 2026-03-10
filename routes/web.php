@@ -67,5 +67,5 @@ Route::post('/player/{player}/answer', [PlayerController::class, 'submitAnswer']
 Route::get('/sessions/{session}', [GameSessionController::class, 'show'])->name('sessions.show'); // Return session info
 
 // Players get final leaderboard
-Route::get('/sessions/{session}/finished', [GameSessionController::class, 'finished']);
+Route::get('/sessions/{session}/finished', [GameSessionController::class, 'finished'])->name('sessions.finished');
 require __DIR__.'/auth.php';

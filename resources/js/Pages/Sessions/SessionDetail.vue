@@ -18,8 +18,7 @@
                         :key="player.id"
                         class="text-gray-900 dark:text-gray-100"
                     >
-                        {{ player.nickname }} - Score: {{ player.correct_count }}
-                    </v-list-item>
+                        {{ player.nickname }} - Score: {{ player.correct_count }} / {{ player.total_answered }}                    </v-list-item>
                 </v-list>
 
                 <div class="mt-4">
