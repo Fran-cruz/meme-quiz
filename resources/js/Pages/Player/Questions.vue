@@ -1,25 +1,49 @@
 <template>
-    <div v-if="quizCompleted" class="text-center p-10 ga-4 text-white">
-        <h1 class="text-3xl font-bold">The game has been completed.</h1>
-        <p>You can wait for results.</p>
+    <div class="matrix-container">
+        <div class="matrix-column" style="left: 10%; animation-duration: 5s;">QUIZ</div>
+        <div class="matrix-column" style="left: 85%; animation-duration: 4s;">LIVE</div>
     </div>
 
-    <div v-else-if="!currentQuestion" class="text-center p-10 text-white">
-        <h1 class="text-2xl font-bold">Loading question...</h1>
-    </div>
+    <div class="relative z-10 min-h-screen flex flex-col overflow-hidden">
 
-    <div v-if="showMeme" class="meme-overlay">
-        <img :src="currentMeme" class="meme-image" />
-    </div>
+        <div class="w-full flex justify-center py-6 shrink-0">
+            <v-img :src="logoMeme" max-width="180" height="100" contain class="logo-glow" />
+        </div>
 
-    <QuestionTemplate
-        v-if="!quizCompleted && currentQuestion"
-        :question="currentQuestion.question"
-        :image="currentQuestion.image"
-        :answers="currentQuestion.answers"
-        :timeLeft="timeLeft"
-        @answerSelected="selectAnswer"
-    />
+        <div class="flex-grow flex flex-col items-center justify-center px-4">
+
+            <div v-if="quizCompleted" class="text-center p-10 bg-black/80 border-2 border-green-500 rounded-3xl shadow-neon-strong">
+                <h1 class="text-3xl font-black text-green-500 mb-2 uppercase tracking-tighter">SISTEMA FINALIZADO</h1>
+                <p class="text-white font-mono opacity-70">Calculando resultados en la terminal...</p>
+            </div>
+
+            <div v-else-if="!currentQuestion" class="text-center p-10">
+                <div class="loading-scanner mx-auto mb-4"></div>
+                <h1 class="text-xl font-mono text-green-500 animate-pulse">> CARGANDO_DATOS...</h1>
+            </div>
+
+            <div v-if="!quizCompleted && currentQuestion" class="w-full max-w-4xl py-4">
+                <QuestionTemplate
+                    :question="currentQuestion.question"
+                    :image="currentQuestion.image"
+                    :answers="currentQuestion.answers"
+                    :timeLeft="timeLeft"
+                    @answerSelected="selectAnswer"
+                    class="neon-question-container"
+                />
+            </div>
+        </div>
+
+        <div v-if="showMeme" class="meme-overlay backdrop-blur-md">
+            <div class="relative p-2 bg-green-500 rounded-lg shadow-neon-strong animate-bounce-short">
+                <img :src="currentMeme" class="meme-image rounded" />
+            </div>
+        </div>
+
+        <div class="fixed bottom-4 right-4 opacity-30 pointer-events-none">
+            <v-img :src="magnusLogo" width="80" contain />
+        </div>
+    </div>
 </template>
 
 <script setup>
@@ -27,6 +51,10 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 import QuestionTemplate from '@/Pages/Components/QuestionTemplate.vue'
 import { usePage } from '@inertiajs/vue3'
+
+// IMPORTACIÓN DE LOGOS
+import logoMeme from './logoMeme.png'
+import magnusLogo from './Magnus_Sistemas_ICC.png'
 
 const page = usePage()
 const playerId = page.props.player.id
@@ -63,9 +91,8 @@ const startTimer = () => {
             timeLeft.value--
         } else {
             clearInterval(timerInterval)
-
             if (!answered.value) {
-                selectAnswer({ id: 81 })
+                selectAnswer({ id: 81 }) // ID por defecto para tiempo agotado
             }
         }
     }, 1000)
@@ -87,14 +114,11 @@ const loadQuestions = async () => {
             q => !(q.id in answeredQuestions.value)
         )
 
-        // If all questions are already answered, mark completed and go back to wait
         if (firstUnansweredIndex === -1) {
             quizCompleted.value = true
-
             setTimeout(() => {
                 window.location.href = `/player/${playerId}/wait`
             }, 1000)
-
             return
         }
 
@@ -132,13 +156,11 @@ const selectAnswer = async (answer) => {
 
         setTimeout(() => {
             showMeme.value = false
-
             if (currentIndex.value < questions.value.length - 1) {
                 currentIndex.value++
                 startTimer()
             } else {
                 quizCompleted.value = true
-
                 setTimeout(() => {
                     window.location.href = `/player/${playerId}/wait`
                 }, 1500)
@@ -179,7 +201,6 @@ watch(
     () => session.value?.status,
     (status) => {
         if (!status || redirected.value) return
-
         if (status === 'finished') {
             redirected.value = true
             window.location.href = `/player/${playerId}/wait`
@@ -188,11 +209,37 @@ watch(
 )
 </script>
 
-<style>
+<style scoped>
+.matrix-container {
+    position: fixed;
+    inset: 0;
+    background: black;
+    z-index: 1;
+}
+
+/* Inyectar estilos neón a los botones de QuestionTemplate */
+:deep(.neon-question-container) button,
+:deep(.neon-question-container) .v-btn {
+    border: 2px solid rgba(0, 255, 65, 0.4) !important;
+    background: rgba(0, 30, 0, 0.7) !important;
+    color: #00FF41 !important;
+    font-family: 'Courier New', monospace !important;
+    box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+    margin-bottom: 12px;
+}
+
+.logo-glow {
+    filter: drop-shadow(0 0 15px rgba(0, 255, 65, 0.6));
+}
+
+.shadow-neon-strong {
+    box-shadow: 0 0 30px rgba(0, 255, 65, 0.4);
+}
+
 .meme-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.9);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -200,7 +247,35 @@ watch(
 }
 
 .meme-image {
-    max-width: 80%;
-    max-height: 80%;
+    max-width: 80vw;
+    max-height: 70vh;
+}
+
+.loading-scanner {
+    width: 100px;
+    height: 3px;
+    background: #00FF41;
+    box-shadow: 0 0 15px #00FF41;
+    animation: scan 2s infinite ease-in-out;
+}
+
+@keyframes scan {
+    0%, 100% { transform: scaleX(0.5); opacity: 0.3; }
+    50% { transform: scaleX(1.2); opacity: 1; }
+}
+
+.matrix-column {
+    position: absolute;
+    top: -100%;
+    color: #003300;
+    font-family: monospace;
+    font-size: 1.2rem;
+    writing-mode: vertical-rl;
+    animation: matrix-fall infinite linear;
+}
+
+@keyframes matrix-fall {
+    0% { top: -100%; }
+    100% { top: 100%; }
 }
 </style>
