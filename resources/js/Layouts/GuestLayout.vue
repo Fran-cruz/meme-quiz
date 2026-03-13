@@ -1,21 +1,19 @@
 <template>
     <div
-        class="flex min-h-screen flex-col items-center bg-gray-100 pt-6 sm:justify-center sm:pt-0 dark:bg-gray-900"
+        class="flex min-h-screen flex-col items-center bg-black pt-6 sm:justify-center sm:pt-0"
     >
         <div>
             <Link href="/">
-                <ApplicationLogo class="h-20 w-20 fill-current text-gray-500" />
+                <ApplicationLogo class="h-20 w-20 fill-current text-primary" />
             </Link>
         </div>
 
-        <!-- Header slot -->
-        <header class="w-full max-w-md px-6">
+        <header class="w-full max-w-md px-6 text-center">
             <slot name="header" />
         </header>
 
-        <!-- Default slot -->
         <div
-            class="mt-6 w-full overflow-hidden bg-white px-6 py-4 shadow-md sm:max-w-md sm:rounded-lg dark:bg-gray-800"
+            class="mt-6 w-full overflow-hidden bg-transparent px-6 py-4 sm:max-w-md"
         >
             <slot />
         </div>
